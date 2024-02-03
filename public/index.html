@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charades Game</title>
+    <style>
+        .category-block {
+            display: inline-block;
+            margin: 10px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<h1>Select a Category</h1>
+
+<div id="categoryContainer">
+    <!-- Categories will be dynamically added here -->
+</div>
+
+<script>
+    // Function to fetch categories from the backend
+    async function fetchCategories() {
+        try {
+            const response = await fetch('http://localhost:5050/categories');
+            const categories = await response.json();
+            return categories;
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+            return [];
+        }
+    }
+    let selectedCategory;
+    // Function to dynamically populate category blocks
+    async function populateCategories() {
+        const categories = await fetchCategories();
+        const categoryContainer = document.getElementById('categoryContainer');
+
+        categories.forEach(category => {
+            const categoryBlock = document.createElement('div');
+            categoryBlock.className = 'category-block';
+            categoryBlock.textContent = category.name;
+
+            // Attach click event to each category block
+            categoryBlock.addEventListener('click', () => {
+                selectedCategory = category;
+                startGame(selectedCategory);
+            });
+            categoryContainer.appendChild(categoryBlock);
+        });
+    }
+
+    // Call the function to populate categories on page load
+    populateCategories();
+    // Function to start the game
+    function startGame(selectedCategory) {
+        // Prompt user to set a timer in seconds
+        const timerInSeconds = prompt('Set the timer (in seconds):');
+
+        // TODO: Implement game logic (timer, random word, correct/incorrect buttons)
+        const gameState = {
+            timer: parseInt(timerInSeconds),
+            correctAnswers: 0,
+            incorrectAnswers: 0,
+            wordList: selectedCategory.items,
+            currentWord: getRandomWord(selectedCategory.items),
+        };
+
+        // Display game UI
+        document.body.innerHTML = `
+    <h1>Charades Game</h1>
+    <div id="gameContainer">
+      <h2 id="wordDisplay">${gameState.currentWord}</h2>
+      <p id="timerDisplay">Timer: ${gameState.timer} seconds</p>
+      <button id="correctButton">Correct</button>
+      <button id="incorrectButton">Incorrect</button>
+    </div>
+  `;
+        // Timer countdown
+        const timerInterval = setInterval(() => {
+            gameState.timer--;
+            document.getElementById('timerDisplay').textContent = `Timer: ${gameState.timer} seconds`;
+
+            if (gameState.timer === 0) {
+                endGame();
+                clearInterval(timerInterval);
+            }
+        }, 1000);
+        document.getElementById('correctButton').addEventListener('click', () => submitAnswer('correct', gameState));
+        document.getElementById('incorrectButton').addEventListener('click', () => submitAnswer('incorrect', gameState));
+
+        function getRandomWord(wordList) {
+            const randomIndex = Math.floor(Math.random() * wordList.length);
+            return wordList[randomIndex];
+        }
+        function submitAnswer(answer,gameStateJSON) {
+            const gameState = JSON.parse(gameStateJSON);
+            if (answer === 'correct') {
+                gameState.correctAnswers++;
+            } else if (answer === 'incorrect') {
+                gameState.incorrectAnswers++;
+            }
+
+            // Get a new random word
+            gameState.currentWord = getRandomWord(gameState.wordList);
+            document.getElementById('wordDisplay').textContent = gameState.currentWord;
+        }
+        function endGame() {
+            clearInterval(timerInterval);
+
+            document.body.innerHTML = `
+    <h1>Game Over</h1>
+    <p>Correct Answers: ${gameState.correctAnswers}</p>
+    <p>Incorrect Answers: ${gameState.incorrectAnswers}</p>
+    <button onclick="restartGame()">Restart Game</button>
+    <button onclick="goBackToCategories()">Go Back to Categories</button>
+  `;
+        }
+        function restartGame() {
+            startGame(selectedCategory);
+        }
+
+        function goBackToCategories() {
+            // Reload the page to go back to category selection
+            location.reload();
+        }
+    }
+</script>
+</body>
+</html>

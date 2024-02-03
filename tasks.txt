@@ -1,0 +1,33 @@
+ADMIN
+-get/load all categories ()
+-get/load one category (id)
+-patch/edit category (id, name, items)
+-delete/(id)
+
+
+---------------------------------------
+USER FACING
+-get/load all categories ()
+-get/load one category (id)
+
+/api calls
+-list categories
+-open category
+
+
+/internal functionalities
+-startTimer(timeInSeconds)
+-randomize 40 items (shuffle + take first 40)
+-keep track of guesses (T/F)
+-on game end show result + guesses
+-option to restart
+-go back to categories
+
+-tiltUp /  - correct
+-tiltDown - incorrect
+
+/default
+movies,animals,famous ppl,
+
+/specific
+kumanovo,

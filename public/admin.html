@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+</head>
+<body>
+<h1>Add Category</h1>
+<!-- Add Category Form (unchanged) -->
+<form id="categoryForm">
+    <label for="newCategoryName">Category Name:</label>
+    <input type="text" id="newCategoryName" name="newCategoryName" required>
+
+    <label for="newCategoryItems">Category Items (comma-separated):</label>
+    <input type="text" id="newCategoryItems" name="newCategoryItems" required>
+
+    <button type="submit">Add Category</button>
+</form>
+
+<hr>
+
+<h1>Find, Edit, or Delete Category</h1>
+<!-- Find, Edit, or Delete Form -->
+<form id="findCategoryForm">
+    <label for="categoryId">Category ID:</label>
+    <input type="text" id="categoryId" name="categoryId" required>
+
+    <button type="submit">Find Category</button>
+</form>
+
+<!-- Display found category and options -->
+<div id="foundCategory">
+    <h2>Found Category</h2>
+    <p id="foundCategoryInfo"></p>
+
+    <!-- Options for found category -->
+    <button id="editCategoryBtn" onclick="editCategory()">Edit Category</button>
+    <button id="deleteCategoryBtn" onclick="deleteCategory()">Delete Category</button>
+</div>
+
+<script>
+    document.getElementById('categoryForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const newCategoryName = document.getElementById('newCategoryName').value;
+        const newCategoryItems = document.getElementById('newCategoryItems').value.split(',');
+
+        fetch('http://localhost:5050/categories', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: newCategoryName, items: newCategoryItems }),
+        })
+            .then(response => response.json())
+            .then(newCategory => {
+                alert('Category added successfully!');
+                // Optionally, clear the input fields or update the UI
+            })
+            .catch(error => {
+                console.error('Error adding category:', error);
+                alert('Error adding category. Please try again.');
+            });
+    });
+
+    document.getElementById('findCategoryForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const categoryId = document.getElementById('categoryId').value;
+
+        fetch(`http://localhost:5050/categories/${categoryId}`)
+            .then(response => response.json())
+            .then(data => {
+                const foundCategoryInfo = `ID: ${data._id}<br>Name: ${data.name}<br>Items: ${data.items.join(', ')}`;
+                document.getElementById('foundCategoryInfo').innerHTML = foundCategoryInfo;
+                document.getElementById('foundCategory').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error finding category:', error);
+                alert('Error finding category. Please check the ID and try again.');
+            });
+    });
+
+    function editCategory() {
+        const categoryId = document.getElementById('categoryId').value;
+        const newName = prompt('Enter the new name for the category:');
+        const newItems = prompt('Enter the new items for the category (comma-separated):').split(',');
+
+        fetch(`http://localhost:5050/categories/${categoryId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: newName, items: newItems }),
+        })
+            .then(response => response.json())
+            .then(updatedCategory => {
+                alert('Category edited successfully!');
+                document.getElementById('foundCategory').style.display = 'none';
+            })
+            .catch(error => {
+                console.error('Error editing category:', error);
+                alert('Error editing category. Please try again.');
+            });
+    }
+
+    function deleteCategory() {
+        const categoryId = document.getElementById('categoryId').value;
+
+        if (confirm('Are you sure you want to delete this category?')) {
+            fetch(`http://localhost:5050/categories/${categoryId}`, {
+                method: 'DELETE',
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Category deleted successfully!');
+                    document.getElementById('foundCategory').style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error deleting category:', error);
+                    alert('Error deleting category. Please try again.');
+                });
+        }
+    }
+</script>
+</body>
+</html>
